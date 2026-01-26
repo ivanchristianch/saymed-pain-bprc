@@ -1,0 +1,67 @@
+from __future__ import annotations
+
+import os
+import uuid
+from pathlib import Path
+from typing import Literal, Optional
+
+from fastapi import APIRouter, File, UploadFile, HTTPException, Depends
+from fastapi.responses import JSONResponse
+
+router = APIRouter(prefix="/api", tags=["audio"])
+
+# Simpan audio di: backend/app/uploads
+UPLOAD_DIR = Path(__file__).resolve().parent.parent / "uploads"
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+ALLOWED_EXT = {".webm", ".ogg", ".wav", ".mp3", ".m4a", ".aac"}
+
+
+def _safe_ext(filename: str) -> str:
+    ext = Path(filename or "").suffix.lower()
+    # beberapa browser kirim filename tanpa ext; default .webm
+    if not ext:
+        ext = ".webm"
+    if ext not in ALLOWED_EXT:
+        # tetap terima, tapi paksa .webm biar aman
+        ext = ".webm"
+    return ext
+
+
+async def _save_upload(file: UploadFile, encounter_id: str, kind: Literal["nursing", "doctor"]) -> dict:
+    if not file:
+        raise HTTPException(status_code=400, detail="file is required")
+
+    ext = _safe_ext(file.filename or "")
+    fname = f"{kind}_{encounter_id}_{uuid.uuid4().hex}{ext}"
+    out_path = UPLOAD_DIR / fname
+
+    try:
+        # stream -> disk
+        with out_path.open("wb") as f:
+            while True:
+                chunk = await file.read(1024 * 1024)  # 1 MB
+                if not chunk:
+                    break
+                f.write(chunk)
+    finally:
+        await file.close()
+
+    return {
+        "ok": True,
+        "encounter_id": encounter_id,
+        "kind": kind,
+        "stored_as": fname,
+        "stored_path": str(out_path),
+        "note": "Audio uploaded and stored. Next step: transcription + auto-fill.",
+    }
+
+
+@router.post("/encounters/{encounter_id}/nursing/audio")
+async def upload_nursing_audio(encounter_id: str, file: UploadFile = File(...)):
+    return await _save_upload(file, encounter_id, "nursing")
+
+
+@router.post("/encounters/{encounter_id}/doctor/audio")
+async def upload_doctor_audio(encounter_id: str, file: UploadFile = File(...)):
+    return await _save_upload(file, encounter_id, "doctor")

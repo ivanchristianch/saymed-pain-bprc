@@ -1,0 +1,68 @@
+services:
+  # 1) Database
+  db:
+    image: postgres:16
+    container_name: saymed_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: saymed
+    ports:
+      - "5432:5432"
+    volumes:
+      - saymed_pg:/var/lib/postgresql/data
+    networks:
+      - saymed_network
+
+  # 2) Backend (FastAPI)
+  api:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: saymed_api
+    restart: always
+    depends_on:
+      - db
+    env_file:
+      - ./backend/.env
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/saymed
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    networks:
+      - saymed_network
+    command: >
+      bash -lc "
+      python -m app.db_init &&
+      uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      "
+
+  # 3) Frontend (Next.js)
+  web:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: saymed_web
+    restart: always
+    depends_on:
+      - api
+    env_file:
+      - ./frontend/.env.local
+    environment:
+      # Browser can access API at localhost:8000 (server-side needs internal alias 'api' if doing SSR)
+      # But since we use client-side fetching mostly, localhost is fine for NEXT_PUBLIC_...
+      - NEXT_PUBLIC_API_BASE=http://localhost:8000
+    ports:
+      - "3000:3000"
+    networks:
+      - saymed_network
+
+volumes:
+  saymed_pg:
+
+networks:
+  saymed_network:
+    driver: bridge
