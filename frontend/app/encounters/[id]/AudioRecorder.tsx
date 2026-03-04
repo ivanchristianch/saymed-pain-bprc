@@ -275,7 +275,7 @@ export default function AudioRecorder({
         </button>
 
         <span className="p" style={{ opacity: 0.9 }}>
-          {recording ? `Recording... ${durationSec}s` : status || "Rekam percakapan perawat/dokter dengan pasien."}
+          {recording ? `Recording... ${durationSec}s` : status || "Rekam percakapan perawat/dokter dengan pasien. (save audio)"}
         </span>
       </div>
 

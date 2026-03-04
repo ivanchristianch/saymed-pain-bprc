@@ -433,26 +433,45 @@ type Props = {
    * Akan di-merge tanpa overwrite input manual.
    */
   prefill?: Partial<DoctorBPRCData> | null;
+  /**
+   * ✅ NEW: Data loaded from backend (persisted).
+   */
+  initialData?: DoctorBPRCData | null;
+  audioFilename?: string | null;
 };
 
-export default function DoctorFormBPRC({ encounterId, onSave, saving, prefill }: Props) {
+export default function DoctorFormBPRC({ encounterId, onSave, saving, prefill, initialData: serverInitialData, audioFilename }: Props) {
   const storageKey = useMemo(() => `doctor_bprc_${encounterId}`, [encounterId]);
 
   const [data, setData] = useState<DoctorBPRCData>(() => initialData());
+
   const [localSaving, setLocalSaving] = useState(false);
 
   const effectiveSaving = !!saving || localSaving;
 
-  /** load draft from localStorage */
+  // load draft from localStorage OR valid initialData prop
   useEffect(() => {
     if (!encounterId) return;
     try {
       const raw = localStorage.getItem(storageKey);
-      if (raw) setData(JSON.parse(raw));
+      if (raw) {
+        setData(JSON.parse(raw));
+      } else if (serverInitialData) {
+        setData(serverInitialData);
+      }
     } catch {
       // ignore
     }
-  }, [encounterId, storageKey]);
+  }, [encounterId, storageKey, serverInitialData]);
+
+  // Handle late-loading initialData
+  useEffect(() => {
+    if (!serverInitialData) return;
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) {
+      setData(serverInitialData);
+    }
+  }, [serverInitialData, storageKey]);
 
   /** ✅ merge prefill when it changes */
   useEffect(() => {
@@ -1098,7 +1117,7 @@ export default function DoctorFormBPRC({ encounterId, onSave, saving, prefill }:
           onClick={handleSave}
           disabled={effectiveSaving}
         >
-          {effectiveSaving ? "Saving..." : "Save Medical"}
+          {effectiveSaving ? "Saving..." : "Save history"}
         </button>
 
         <button
@@ -1109,23 +1128,7 @@ export default function DoctorFormBPRC({ encounterId, onSave, saving, prefill }:
         >
           Reset
         </button>
-
-        <button
-          className="btn"
-          type="button"
-          onClick={() => {
-            try {
-              localStorage.setItem(storageKey, JSON.stringify(data));
-              alert("Draft saved to localStorage.");
-            } catch {
-              alert("Failed saving draft.");
-            }
-          }}
-          disabled={effectiveSaving}
-        >
-          Save Draft
-        </button>
       </div>
-    </div>
+    </div >
   );
 }

@@ -34,17 +34,45 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="card" style={{ maxWidth: 520 }}>
-      <h1 className="h1">Login</h1>
+    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "80vh" }}>
+      <div className="card" style={{ maxWidth: 420, width: "100%", padding: "40px 32px", textAlign: "center" }}>
 
-      <form onSubmit={onLogin} style={{ marginTop: 16 }}>
-        <div style={{ display: "grid", gap: 10 }}>
-          <input className="input" value={email} onChange={e => setEmail(e.target.value)} placeholder="email" />
-          <input className="input" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="password" />
-          <button className="btn btnPrimary" type="submit">Sign in</button>
-          <div className="p">{status}</div>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+          <div className="logoBox" style={{ width: 56, height: 56, fontSize: 20 }}>SM</div>
         </div>
-      </form>
+
+        <h1 className="h1">SayMed</h1>
+        <p className="p" style={{ marginBottom: 32 }}>Type Less. Say More.</p>
+
+        <form onSubmit={onLogin} style={{ textAlign: "left" }}>
+          <div style={{ display: "grid", gap: 16 }}>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Email Address</label>
+              <input className="input" value={email} onChange={e => setEmail(e.target.value)} placeholder="doctor@bprc.local" />
+            </div>
+
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Password</label>
+              <input className="input" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter your password" />
+            </div>
+
+            <button className="btn btnPrimary" type="submit" style={{ marginTop: 8, width: "100%", padding: "12px 16px", fontSize: 16 }}>
+              Sign in
+            </button>
+
+            {status && (
+              <div className="p" style={{ textAlign: "center", marginTop: 8, color: status.includes("Error") ? "var(--danger)" : "var(--primary)" }}>
+                {status}
+              </div>
+            )}
+
+            <div className="p" style={{ textAlign: "center", marginTop: 16, fontSize: 12 }}>
+              Default Roles: doctor@bprc.local | nurse@bprc.local | admin@bprc.local<br />
+              Password: RoleName123!
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

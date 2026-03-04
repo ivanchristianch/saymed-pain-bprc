@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, date, time
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from typing import Optional, List, Dict, Any, Literal
 
 Role = Literal["admin","doctor","nurse"]
@@ -18,6 +18,7 @@ class LoginIn(BaseModel):
     password: str
 
 class UserMe(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID
     email: EmailStr
     full_name: str
@@ -32,6 +33,8 @@ class PatientCreate(BaseModel):
     address: Optional[str] = None
     phone: Optional[str] = None
     referral_source: Optional[str] = None
+    blood_group: Optional[str] = None
+    marital_status: Optional[str] = None
 
 class PatientUpdate(BaseModel):
     rm_number: Optional[str] = None
@@ -42,8 +45,11 @@ class PatientUpdate(BaseModel):
     address: Optional[str] = None
     phone: Optional[str] = None
     referral_source: Optional[str] = None
+    blood_group: Optional[str] = None
+    marital_status: Optional[str] = None
 
 class PatientOut(PatientCreate):
+    model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID
     created_at: datetime
     updated_at: datetime
@@ -55,6 +61,7 @@ class EncounterCreate(BaseModel):
     insurance_name: Optional[str] = None
 
 class EncounterOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID
     patient_id: uuid.UUID
     visit_datetime: datetime
@@ -63,6 +70,14 @@ class EncounterOut(BaseModel):
     status_nurse: EncounterStatus
     status_doctor: EncounterStatus
     finalized_at: Optional[datetime]
+    
+    audio_nurse: Optional[str] = None
+    audio_doctor: Optional[str] = None
+
+    therapy: Optional["TherapyOut"] = None
+    discharge_summary: Optional["DischargeSummaryOut"] = None
+    correspondences: List["CorrespondenceOut"] = []
+
     created_at: datetime
     updated_at: datetime
 
@@ -169,3 +184,54 @@ class MedicalUpsert(BaseModel):
 
 class ExamUpsert(BaseModel):
     physical_exam_json: Dict[str, Any] | None = None
+
+class TherapyUpsert(BaseModel):
+    treatment_plan: Optional[str] = None
+    medications_json: Optional[List[Dict[str, Any]]] = None
+    non_pharm_physio: Optional[str] = None
+    non_pharm_lifestyle: Optional[str] = None
+    non_pharm_education: Optional[str] = None
+    procedures_performed: Optional[str] = None
+    monitoring_notes: Optional[str] = None
+
+class TherapyOut(TherapyUpsert):
+    model_config = ConfigDict(from_attributes=True)
+    encounter_id: uuid.UUID
+    updated_at: datetime
+
+class DischargeSummaryUpsert(BaseModel):
+    admission_date: Optional[date] = None
+    discharge_date: Optional[date] = None
+    primary_diagnosis: Optional[str] = None
+    secondary_diagnoses: Optional[str] = None
+    clinical_course_summary: Optional[str] = None
+    procedures_performed: Optional[str] = None
+    medications_on_discharge: Optional[str] = None
+    followup_plan: Optional[str] = None
+    patient_education: Optional[str] = None
+
+class DischargeSummaryOut(DischargeSummaryUpsert):
+    model_config = ConfigDict(from_attributes=True)
+    encounter_id: uuid.UUID
+    updated_at: datetime
+
+class CorrespondenceCreate(BaseModel):
+    document_type: str
+    recipient: Optional[str] = None
+    subject: Optional[str] = None
+    body_text: Optional[str] = None
+    attachment_file_id: Optional[uuid.UUID] = None
+
+class CorrespondenceUpdate(BaseModel):
+    document_type: Optional[str] = None
+    recipient: Optional[str] = None
+    subject: Optional[str] = None
+    body_text: Optional[str] = None
+    attachment_file_id: Optional[uuid.UUID] = None
+
+class CorrespondenceOut(CorrespondenceCreate):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    encounter_id: uuid.UUID
+    created_at: datetime
+    updated_at: datetime

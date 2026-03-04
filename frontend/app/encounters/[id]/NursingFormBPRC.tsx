@@ -100,6 +100,10 @@ type Props = {
    * Form akan merge TANPA menimpa input user yang sudah ada.
    */
   prefill?: Partial<NursingBPRCData> | null;
+  /**
+   * ✅ NEW: Data loaded from backend (persisted).
+   */
+  initialData?: NursingBPRCData | null;
 };
 
 function calcIMT(bbKg: number, tbCm: number) {
@@ -257,21 +261,43 @@ function defaultNursingForm(): NursingBPRCData {
   };
 }
 
-export default function NursingFormBPRC({ encounterId, onSave, saving, prefill }: Props) {
+export default function NursingFormBPRC({ encounterId, onSave, saving, prefill, initialData }: Props) {
   const storageKey = useMemo(() => `nursing_bprc_${encounterId}`, [encounterId]);
 
   const [form, setForm] = useState<NursingBPRCData>(() => defaultNursingForm());
 
-  // load draft from localStorage
+  // load draft from localStorage OR valid initialData
   useEffect(() => {
     if (!encounterId) return;
     try {
+      // Priority: 1. localStorage draft (most recent edits), 2. initialData (backend), 3. default
+      // But if initialData is provided and localStorage is empty/older(?), we should use initialData.
+      // Simplest: Check localStorage first.
       const raw = localStorage.getItem(storageKey);
-      if (raw) setForm(JSON.parse(raw));
+      if (raw) {
+        setForm(JSON.parse(raw));
+      } else if (initialData) {
+        setForm(initialData);
+      }
     } catch {
       // ignore
     }
-  }, [encounterId, storageKey]);
+  }, [encounterId, storageKey, initialData]);
+
+  /** 
+   * If initialData loads LATER (async), and form is still "virgin" or matches default, update it.
+   * Or if user hasn't edited yet.
+   * For now, let's just update if we have initialData and NO draft in localStorage.
+   */
+  useEffect(() => {
+    if (!initialData) return;
+    // Check if we have a draft. If we do, don't overwrite with backend data (user might have unsaved work).
+    // If no draft, safe to set.
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) {
+      setForm(initialData);
+    }
+  }, [initialData, storageKey]);
 
   /**
    * ✅ NEW: merge prefill into form (tanpa overwrite input user)

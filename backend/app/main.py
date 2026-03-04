@@ -10,7 +10,8 @@ from .db import get_db
 from . import schemas
 from .models import (
     User, Role, Patient, Encounter, PaymentType, EncounterStatus,
-    NursingAssessment, MedicalAssessment, PhysicalExam
+    NursingAssessment, MedicalAssessment, PhysicalExam,
+    Therapy, DischargeSummary, Correspondence
 )
 from .security import verify_password, create_access_token
 from .deps import get_current_user, require_role
@@ -119,6 +120,28 @@ def list_patients(
         q = q.filter(Patient.full_name.ilike(like))
     return q.order_by(Patient.updated_at.desc()).limit(50).all()
 
+# --------------------
+# Audio Serving
+# --------------------
+from fastapi.responses import FileResponse
+
+@app.get("/api/audio/{filename}")
+def get_audio_file(
+    filename: str,
+    db: Session = Depends(get_db),
+    # Optional: require auth to play audio?
+    # user: User = Depends(require_role(Role.admin, Role.doctor, Role.nurse)),
+):
+    # Security check: prevent directory traversal
+    if ".." in filename or "/" in filename or "\\" in filename:
+        raise HTTPException(400, "Invalid filename")
+    
+    file_path = UPLOAD_DIR / filename
+    if not file_path.exists():
+        raise HTTPException(404, "Audio file not found")
+    
+    return FileResponse(file_path)
+
 @app.get("/api/patients/{patient_id}", response_model=schemas.PatientOut)
 def get_patient(
     patient_id: str,
@@ -198,9 +221,13 @@ def list_encounters(
     db: Session = Depends(get_db),
     user: User = Depends(require_role(Role.admin, Role.doctor, Role.nurse)),
 ):
+    try:
+        pid = uuid.UUID(patient_id)
+    except ValueError:
+        raise HTTPException(400, "Invalid patient_id UUID")
     return (
         db.query(Encounter)
-        .filter(Encounter.patient_id == patient_id)
+        .filter(Encounter.patient_id == pid)
         .order_by(Encounter.visit_datetime.desc())
         .limit(50)
         .all()
@@ -298,20 +325,144 @@ def upsert_exam(
     db: Session = Depends(get_db),
     user: User = Depends(require_role(Role.admin, Role.doctor)),
 ):
-    enc = db.get(Encounter, encounter_id)
+    try:
+        enc_uuid = uuid.UUID(encounter_id)
+    except ValueError:
+        raise HTTPException(400, "Invalid UUID")
+
+    enc = db.get(Encounter, enc_uuid)
     if not enc:
         raise HTTPException(404, "Encounter not found")
     if enc.status_doctor == EncounterStatus.final and user.role != Role.admin:
         raise HTTPException(409, "Encounter is finalized")
 
-    obj = db.get(PhysicalExam, encounter_id)
+    obj = db.get(PhysicalExam, enc_uuid)
     if not obj:
-        obj = PhysicalExam(encounter_id=encounter_id, physical_exam_json=payload.physical_exam_json)
+        obj = PhysicalExam(encounter_id=enc_uuid, physical_exam_json=payload.physical_exam_json)
         db.add(obj)
     else:
         obj.physical_exam_json = payload.physical_exam_json
 
     enc.updated_by = user.id
+    db.commit()
+    return {"ok": True}
+
+@app.put("/api/encounters/{encounter_id}/therapy")
+def upsert_therapy(
+    encounter_id: str,
+    payload: schemas.TherapyUpsert,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role(Role.admin, Role.doctor)),
+):
+    try:
+        enc_uuid = uuid.UUID(encounter_id)
+    except ValueError:
+        raise HTTPException(400, "Invalid UUID")
+
+    enc = db.get(Encounter, enc_uuid)
+    if not enc:
+        raise HTTPException(404, "Encounter not found")
+    if enc.status_doctor == EncounterStatus.final and user.role != Role.admin:
+        raise HTTPException(409, "Encounter is finalized")
+
+    obj = db.get(Therapy, enc_uuid)
+    data = payload.model_dump(exclude_unset=True)
+    if not obj:
+        obj = Therapy(encounter_id=enc_uuid, **data)
+        db.add(obj)
+    else:
+        for k, v in data.items():
+            setattr(obj, k, v)
+
+    enc.updated_by = user.id
+    db.commit()
+    return {"ok": True}
+
+@app.put("/api/encounters/{encounter_id}/discharge")
+def upsert_discharge_summary(
+    encounter_id: str,
+    payload: schemas.DischargeSummaryUpsert,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role(Role.admin, Role.doctor)),
+):
+    try:
+        enc_uuid = uuid.UUID(encounter_id)
+    except ValueError:
+        raise HTTPException(400, "Invalid UUID")
+
+    enc = db.get(Encounter, enc_uuid)
+    if not enc:
+        raise HTTPException(404, "Encounter not found")
+    if enc.status_doctor == EncounterStatus.final and user.role != Role.admin:
+        raise HTTPException(409, "Encounter is finalized")
+
+    obj = db.get(DischargeSummary, enc_uuid)
+    data = payload.model_dump(exclude_unset=True)
+    if not obj:
+        obj = DischargeSummary(encounter_id=enc_uuid, **data)
+        db.add(obj)
+    else:
+        for k, v in data.items():
+            setattr(obj, k, v)
+
+    enc.updated_by = user.id
+    db.commit()
+    return {"ok": True}
+
+@app.post("/api/encounters/{encounter_id}/correspondence", response_model=schemas.CorrespondenceOut)
+def create_correspondence(
+    encounter_id: str,
+    payload: schemas.CorrespondenceCreate,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role(Role.admin, Role.doctor)),
+):
+    try:
+        enc_uuid = uuid.UUID(encounter_id)
+    except ValueError:
+        raise HTTPException(400, "Invalid UUID")
+
+    enc = db.get(Encounter, enc_uuid)
+    if not enc:
+        raise HTTPException(404, "Encounter not found")
+    
+    obj = Correspondence(encounter_id=enc_uuid, **payload.model_dump())
+    db.add(obj)
+    db.commit()
+    db.refresh(obj)
+    return obj
+
+@app.put("/api/encounters/{encounter_id}/correspondence/{corr_id}", response_model=schemas.CorrespondenceOut)
+def update_correspondence(
+    encounter_id: str,
+    corr_id: str,
+    payload: schemas.CorrespondenceUpdate,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role(Role.admin, Role.doctor)),
+):
+    obj = db.get(Correspondence, corr_id)
+    if not obj or str(obj.encounter_id) != encounter_id:
+        raise HTTPException(404, "Correspondence not found")
+    
+    data = payload.model_dump(exclude_unset=True)
+    for k, v in data.items():
+        setattr(obj, k, v)
+        
+    db.commit()
+    db.refresh(obj)
+    return obj
+
+@app.delete("/api/encounters/{encounter_id}/correspondence/{corr_id}")
+def delete_correspondence(
+    encounter_id: str,
+    corr_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role(Role.admin, Role.doctor)),
+):
+    obj = db.get(Correspondence, corr_id)
+    if not obj or str(obj.encounter_id) != encounter_id:
+        raise HTTPException(404, "Correspondence not found")
+    
+    db.delete(obj)
     db.commit()
     return {"ok": True}
 
@@ -375,7 +526,12 @@ def generate_pdf(
 ):
     from .pdf import render_medical_record_pdf
     
-    enc = db.get(Encounter, encounter_id)
+    try:
+        enc_uuid = uuid.UUID(encounter_id)
+    except ValueError:
+        raise HTTPException(400, "Invalid UUID")
+
+    enc = db.get(Encounter, enc_uuid)
     if not enc:
         raise HTTPException(404, "Encounter not found")
     
@@ -384,10 +540,14 @@ def generate_pdf(
     if not patient:
         raise HTTPException(404, "Patient not found")
     
-    # Fetch assessments
-    nursing = db.get(NursingAssessment, encounter_id)
-    medical = db.get(MedicalAssessment, encounter_id)
-    exam = db.get(PhysicalExam, encounter_id)
+    # Fetch assessments via relationship for consistency
+    nursing = enc.nursing
+    medical = enc.medical
+    # Physical exam is inside medical dict usually, or separate model? 
+    # In models.py: exam = relationship("PhysicalExam", ...)
+    # In generate_pdf: we looked for db.get(PhysicalExam).
+    # Using relationship is safer.
+    exam = enc.exam
     
     # Prepare data dictionaries
     encounter_dict = {
@@ -406,47 +566,91 @@ def generate_pdf(
         "address": patient.address or "-",
     }
     
-    nursing_dict = None
+    # --- FALLBACK DEFAULTS ---
+    default_nursing = {
+        "chief_complaint_nurse": "-",
+        "allergy_status": "-",
+        "vitals_bp_systolic": "-",
+        "vitals_bp_diastolic": "-",
+        "vitals_hr": "-",
+        "vitals_rr": "-",
+        "vitals_temp_c": "-",
+        "vitals_spo2": "-",
+        "pain_score": "-",
+        "pain_location": "-",
+        "pain_duration": "-",
+        "pain_scale_type": "-",
+        "fallrisk_level": "-",
+        "nutrition_risk_label": "-",
+        "weight_kg": None,
+        "height_cm": None,
+        "bmi": None,
+    }
+
+    default_medical = {
+        "chief_complaint_doctor": "-",
+        "anamnesis": "-",
+        "working_diagnosis": "-",
+        "differential_diagnosis": "-",
+        "plan_notes": "-",
+        "current_medications": "-",
+        "previous_diagnoses_treatments": "-",
+        "rpd": "-",
+        "rpk": "-",
+        "allergy_history": "-",
+        "physical_exam_json": None,
+        "lab_results": "-",
+        "radiology": "-",
+        "followup_date": None,
+        "followup_time": None,
+    }
+
+    nursing_dict = default_nursing.copy()
     if nursing:
-        nursing_dict = {
-            "chief_complaint_nurse": nursing.chief_complaint_nurse,
-            "allergy_status": nursing.allergy_status,
+        nursing_dict.update({
+            "chief_complaint_nurse": nursing.chief_complaint_nurse or "-",
+            "allergy_status": nursing.allergy_status or "-",
             "vitals_bp_systolic": nursing.vitals_bp_systolic,
             "vitals_bp_diastolic": nursing.vitals_bp_diastolic,
             "vitals_hr": nursing.vitals_hr,
             "vitals_rr": nursing.vitals_rr,
             "vitals_temp_c": nursing.vitals_temp_c,
-            "vitals_spo2": nursing.vitals_spo2,
+            "vitals_spo2": nursing.vitals_spo2 or "-",
             "pain_score": nursing.pain_score,
-            "pain_location": nursing.pain_location,
-            "pain_duration": nursing.pain_duration,
-            "pain_scale_type": nursing.pain_scale_type,
-            "fallrisk_level": nursing.fallrisk_level,
-            "nutrition_risk_label": nursing.nutrition_risk_label,
-            "weight_kg": float(nursing.weight_kg) if nursing.weight_kg else None,
-            "height_cm": float(nursing.height_cm) if nursing.height_cm else None,
-            "bmi": float(nursing.bmi) if nursing.bmi else None,
-        }
+            "pain_location": nursing.pain_location or "-",
+            "pain_duration": nursing.pain_duration or "-",
+            "pain_scale_type": nursing.pain_scale_type or "-",
+            "fallrisk_level": nursing.fallrisk_level or "-",
+            "nutrition_risk_label": nursing.nutrition_risk_label or "-",
+            "weight_kg": float(nursing.weight_kg) if nursing.weight_kg is not None else None,
+            "height_cm": float(nursing.height_cm) if nursing.height_cm is not None else None,
+            "bmi": float(nursing.bmi) if nursing.bmi is not None else None,
+        })
     
-    medical_dict = None
+    medical_dict = default_medical.copy()
     if medical:
-        medical_dict = {
-            "chief_complaint_doctor": medical.chief_complaint_doctor,
-            "anamnesis": medical.anamnesis,
-            "working_diagnosis": medical.working_diagnosis,
+        # Helper for lists
+        def fmt_list(val):
+            if isinstance(val, list): return ", ".join(val)
+            return str(val) if val else "-"
+
+        medical_dict.update({
+            "chief_complaint_doctor": medical.chief_complaint_doctor or "-",
+            "anamnesis": medical.anamnesis or "-",
+            "working_diagnosis": medical.working_diagnosis or "-",
             "differential_diagnosis": medical.differential_diagnosis or "-",
-            "plan_notes": medical.plan_notes,
+            "plan_notes": medical.plan_notes or "-",
             "current_medications": medical.current_medications or "-",
-            "previous_diagnoses_treatments": medical.previous_diagnoses_treatments,
-            "rpd": ", ".join([f"{k}: {v}" for k, v in (medical.pmh or []) if v]) if isinstance(medical.pmh, dict) else (str(medical.pmh) if medical.pmh else "-"),
-            "rpk": medical.family_history,
-            "allergy_history": str(medical.allergy_history) if medical.allergy_history else "-",
+            "previous_diagnoses_treatments": medical.previous_diagnoses_treatments or "-",
+            "rpd": fmt_list(medical.pmh),
+            "rpk": medical.family_history or "-",
+            "allergy_history": fmt_list(medical.allergy_history),
             "physical_exam_json": exam.physical_exam_json if exam else None,
-            "lab_results": medical.labs,
-            "radiology": medical.mri_ct,
+            "lab_results": medical.labs or "-",
+            "radiology": medical.mri_ct or "-",
             "followup_date": str(medical.followup_date) if medical.followup_date else None,
             "followup_time": str(medical.followup_time) if medical.followup_time else None,
-        }
+        })
     
     pdf_bytes = render_medical_record_pdf(encounter_dict, patient_dict, nursing_dict, medical_dict)
     
@@ -481,24 +685,33 @@ async def voice_upload(
     # 1️⃣ Save audio file
     result = await _save_audio_file(encounter_id, role, audio)
     saved_path = Path(result["stored_path"])
+    filename = result["filename"]
+
+    # UPDATE DB with filename
+    if role == "doctor":
+        enc.audio_doctor = filename
+    elif role == "nurse":
+        enc.audio_nurse = filename
+    db.commit()
 
     # 2️⃣ TRANSCRIPTION (OpenAI Whisper)
     try:
         if not settings.openai_api_key:
-             raise Exception("OPENAI_API_KEY not set in .env")
-        
-        client = OpenAI(api_key=settings.openai_api_key)
-
-        with open(saved_path, "rb") as audio_file:
-            transcript_resp = client.audio.transcriptions.create(
-                model="whisper-1",
-                file=audio_file,
-                language="id" # Optimize for Indonesian
-            )
-        transcript_text = transcript_resp.text
+             # Just warn, don't crash, so audio is still saved
+             print("OPENAI_API_KEY not set in .env")
+             transcript_text = "(API Key missing)"
+        else:
+            client = OpenAI(api_key=settings.openai_api_key)
+            with open(saved_path, "rb") as audio_file:
+                transcript_resp = client.audio.transcriptions.create(
+                    model="whisper-1",
+                    file=audio_file,
+                    language="id" 
+                )
+            transcript_text = transcript_resp.text
     except Exception as e:
         print(f"Transcription failed: {e}")
-        transcript_text = "(Transcription failed or API Key missing)"
+        transcript_text = f"(Transcription failed: {str(e)})"
 
     # 3️⃣ EXTRACTION (OpenAI GPT-4o)
     structured = {}

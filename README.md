@@ -9,23 +9,25 @@ Stack (locked):
 
 ## Quick start (local)
 
-### 1) Backend + DB (Docker)
+### 1) Setup Environment Variables
 ```bash
-cd backend
-cp .env.example .env
-docker compose up --build
+# Copy backend env example
+cp backend/.env.example backend/.env
+
+# Copy frontend env example
+cp frontend/.env.local.example frontend/.env.local
+```
+
+### 2) Run Everything via Docker
+From the root directory of the project, run:
+```bash
+docker compose build --no-cache
+docker compose up -d
 ```
 
 Backend will be on: http://localhost:8000  
 Docs: http://localhost:8000/docs
-
-### 2) Frontend
-```bash
-cd frontend
-cp .env.local.example .env.local
-npm install
-npm run dev
-```
+Frontend will be on: http://localhost:3000
 
 Frontend will be on: http://localhost:3000
 

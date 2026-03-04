@@ -34,16 +34,21 @@ export default function PatientDetail() {
   const [formData, setFormData] = useState<any>({});
 
   async function load() {
-    setStatus("Loading...");
-    const pr = await fetch(`${API}/api/patients/${id}`, { headers: authHeaders() });
-    if (!pr.ok) { setStatus("Failed. Please login."); return; }
-    const p = await pr.json();
-    setPatient(p);
-    setFormData(p);
+    try {
+      setStatus("Loading...");
+      const pr = await fetch(`${API}/api/patients/${id}`, { headers: authHeaders() });
+      if (!pr.ok) { setStatus("Failed. Please login."); return; }
+      const p = await pr.json();
+      setPatient(p);
+      setFormData(p);
 
-    const er = await fetch(`${API}/api/encounters?patient_id=${id}`, { headers: authHeaders() });
-    setEncounters(er.ok ? await er.json() : []);
-    setStatus("");
+      const er = await fetch(`${API}/api/encounters?patient_id=${id}`, { headers: authHeaders() });
+      setEncounters(er.ok ? await er.json() : []);
+      setStatus("");
+    } catch (err: any) {
+      console.error(err);
+      setStatus(`Error loading page: ${err.message}`);
+    }
   }
 
   async function savePatient() {

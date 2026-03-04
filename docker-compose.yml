@@ -45,6 +45,8 @@ services:
     build: 
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE: http://localhost:8000
     container_name: saymed_web
     restart: always
     depends_on:

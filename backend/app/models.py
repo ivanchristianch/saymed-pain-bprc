@@ -48,6 +48,8 @@ class Patient(Base):
     address: Mapped[str | None] = mapped_column(Text, nullable=True)
     phone: Mapped[str | None] = mapped_column(String(64), nullable=True)
     referral_source: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    blood_group: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    marital_status: Mapped[str | None] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -74,6 +76,13 @@ class Encounter(Base):
     nursing = relationship("NursingAssessment", back_populates="encounter", uselist=False, cascade="all, delete-orphan")
     medical = relationship("MedicalAssessment", back_populates="encounter", uselist=False, cascade="all, delete-orphan")
     exam = relationship("PhysicalExam", back_populates="encounter", uselist=False, cascade="all, delete-orphan")
+    therapy = relationship("Therapy", back_populates="encounter", uselist=False, cascade="all, delete-orphan")
+    discharge_summary = relationship("DischargeSummary", back_populates="encounter", uselist=False, cascade="all, delete-orphan")
+    correspondences = relationship("Correspondence", back_populates="encounter", cascade="all, delete-orphan")
+    
+    # Audio recordings
+    audio_nurse: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    audio_doctor: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
 class NursingAssessment(Base):
     __tablename__ = "nursing_assessments"
@@ -221,3 +230,47 @@ class AuditLog(Base):
     diff: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     actor_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+class Therapy(Base):
+    __tablename__ = "therapies"
+    encounter_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("encounters.id"), primary_key=True)
+    treatment_plan: Mapped[str | None] = mapped_column(Text, nullable=True)
+    medications_json: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+    non_pharm_physio: Mapped[str | None] = mapped_column(Text, nullable=True)
+    non_pharm_lifestyle: Mapped[str | None] = mapped_column(Text, nullable=True)
+    non_pharm_education: Mapped[str | None] = mapped_column(Text, nullable=True)
+    procedures_performed: Mapped[str | None] = mapped_column(Text, nullable=True)
+    monitoring_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    encounter = relationship("Encounter", back_populates="therapy")
+
+class DischargeSummary(Base):
+    __tablename__ = "discharge_summaries"
+    encounter_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("encounters.id"), primary_key=True)
+    admission_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    discharge_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    primary_diagnosis: Mapped[str | None] = mapped_column(Text, nullable=True)
+    secondary_diagnoses: Mapped[str | None] = mapped_column(Text, nullable=True)
+    clinical_course_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    procedures_performed: Mapped[str | None] = mapped_column(Text, nullable=True)
+    medications_on_discharge: Mapped[str | None] = mapped_column(Text, nullable=True)
+    followup_plan: Mapped[str | None] = mapped_column(Text, nullable=True)
+    patient_education: Mapped[str | None] = mapped_column(Text, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    encounter = relationship("Encounter", back_populates="discharge_summary")
+
+class Correspondence(Base):
+    __tablename__ = "correspondences"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    encounter_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("encounters.id"), index=True)
+    document_type: Mapped[str] = mapped_column(String(64))
+    recipient: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    subject: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    body_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    attachment_file_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("files.id"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    encounter = relationship("Encounter", back_populates="correspondences")
