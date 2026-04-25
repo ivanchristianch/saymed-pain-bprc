@@ -38,7 +38,7 @@ const theme = createTheme({
         root: {
           borderRadius: 8,
           padding: '8px 16px',
-        },@saymed-pain-bprc-ai/.venv/lib/python3.12/site-packages/triton/experimental/gluon/language/_core.py 
+        }, 
       },
     },
     MuiPaper: {
