@@ -25,12 +25,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
 
-# Copy compiled output
+# Copy compiled output (includes dist/src/ and dist/migrations/)
 COPY --from=builder /app/dist ./dist
-
-# Migrations are loaded at runtime (Kysely FileMigrationProvider)
-COPY migrations ./migrations
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "node dist/migrate.js && node dist/index.js"]
+CMD ["sh", "-c", "node dist/src/migrate.js && node dist/src/index.js"]
