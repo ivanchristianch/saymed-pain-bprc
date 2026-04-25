@@ -14,56 +14,78 @@ services:
       - saymed_pg:/var/lib/postgresql/data
     networks:
       - saymed_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d saymed"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
-  # 2) Backend (FastAPI)
+  # 2) Redis (pipeline deduplication locks)
+  redis:
+    image: redis:7-alpine
+    container_name: saymed_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - saymed_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # 3) Backend (Node.js/Express)
   api:
-    build: 
+    build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: saymed_api
     restart: always
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     env_file:
       - ./backend/.env
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/saymed
+      - REDIS_URL=redis://redis:6379
+      - PORT=8000
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/app
+      - /app/node_modules
     networks:
       - saymed_network
     command: >
-      bash -lc "
-      python -m app.db_init &&
-      uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-      "
+      sh -c "npm install && npm run migrate && npm run seed && npm run dev"
 
-  # 3) Frontend (Next.js)
+  # 4) Frontend (Vite React)
   web:
-    build: 
+    build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_API_BASE: http://localhost:8000
     container_name: saymed_web
     restart: always
     depends_on:
       - api
-    env_file:
-      - ./frontend/.env.local
     environment:
-      # Browser can access API at localhost:8000 (server-side needs internal alias 'api' if doing SSR)
-      # But since we use client-side fetching mostly, localhost is fine for NEXT_PUBLIC_...
-      - NEXT_PUBLIC_API_BASE=http://localhost:8000
+      # Browser fetches API at localhost:8000 (client-side only, no SSR)
+      - VITE_API_BASE=http://localhost:8000/api
     ports:
       - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     networks:
       - saymed_network
 
 volumes:
   saymed_pg:
+
 
 networks:
   saymed_network:

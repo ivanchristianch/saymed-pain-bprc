@@ -1,0 +1,142 @@
+{
+  "login": {
+    "title": "Masuk ke SayMed",
+    "email": "Alamat Email",
+    "password": "Kata Sandi",
+    "submit": "Masuk",
+    "error": "Email atau kata sandi salah"
+  },
+  "nav": {
+    "patients": "Pasien",
+    "logout": "Keluar"
+  },
+  "patients": {
+    "title": "Daftar Pasien",
+    "add": "Tambah Pasien",
+    "search": "Cari pasien...",
+    "id": "ID",
+    "name": "Nama Lengkap",
+    "rm": "No. Rekam Medis",
+    "gender": "Jenis Kelamin",
+    "marital": "Status Pernikahan",
+    "blood": "Golongan Darah",
+    "age": "Umur",
+    "encounters": "Kunjungan",
+    "actions": "Aksi",
+    "single": "Belum Menikah",
+    "married": "Menikah",
+    "divorced": "Cerai",
+    "widowed": "Janda/Duda"
+  },
+  "patientDetail": {
+    "edit": "Ubah Data",
+    "delete": "Hapus Pasien",
+    "confirmDelete": "Apakah Anda yakin ingin menghapus pasien ini?",
+    "encounters": "Daftar Kunjungan",
+    "createEncounter": "Buat Kunjungan Baru",
+    "encounterName": "Nama Kunjungan (opsional)"
+  },
+  "encounter": {
+    "tabs": {
+      "s": "S (Riwayat)",
+      "o": "O (Pemeriksaan)",
+      "a": "A (Penilaian)",
+      "p": "P (Rencana)",
+      "transcript": "Transkripsi"
+    },
+    "recording": {
+      "start": "Mulai Rekam",
+      "stop": "Berhenti Rekam",
+      "selectAudio": "Pilih Audio",
+      "uploadAudio": "Unggah Audio",
+      "uploading": "Mengunggah audio...",
+      "transcribeAndAnalyze": "Transkrip & Analisis",
+      "analyzeOnly": "Analisis",
+      "processing": "Sedang memproses AI...",
+      "transcribing": "Mentranskripsi audio...",
+      "analyzing": "Menganalisis transkripsi...",
+      "instructions": "Mohon jangan tutup halaman ini hingga proses selesai.",
+      "elapsed": "Durasi",
+      "retryTranscribe": "Transkrip & Analisis gagal. Silakan coba lagi.",
+      "retryAnalyze": "Analisis gagal. Klik tombol di bawah untuk mencoba lagi.",
+      "transcriptAvailable": "Transkripsi tersedia"
+    },
+    "save": "Simpan",
+    "saved": "Berhasil disimpan!",
+    "soap": {
+      "noAudio": "Belum Ada Audio",
+      "noAudioHint": "Rekam atau pilih audio terlebih dahulu menggunakan panel di sebelah kiri.",
+      "pendingUpload": "Audio Dipilih",
+      "pendingUploadHint": "Klik \"Unggah Audio\" untuk mengunggah audio ke server.",
+      "pendingTranscript": "Audio Diunggah",
+      "pendingTranscriptHint": "Klik \"Transkrip & Analisis\" untuk memulai analisis SOAP.",
+      "pendingAnalysis": "Transkripsi Selesai",
+      "pendingAnalysisHint": "Klik \"Analisis\" untuk menganalisis transkripsi dan mengisi formulir SOAP."
+    }
+  },
+  "s": {
+    "chiefComplaint": "Keluhan Utama",
+    "previousTreatmentHistory": "Riwayat Pengobatan & Diagnosis Sebelumnya",
+    "postOpStatus": "Post Op",
+    "postProcedureStatus": "Post Tindakan",
+    "onsetRange": "Mulainya Gejala Sejak",
+    "currentMedications": "Obat yang Sedang Diminum",
+    "pastMedicalHistory": "Riwayat Penyakit Dahulu",
+    "familyHistory": "Riwayat Penyakit Keluarga",
+    "allergies": "Riwayat Alergi",
+    "otherAllergies": "Alergi Lainnya",
+    "anamnesis": "Anamnesis",
+    "anamnesisNumbness": "Baal",
+    "anamnesisTingling": "Kesemutan",
+    "anamnesisHeadache": "Sakit Kepala",
+    "sleepQuality": "Kualitas Tidur",
+    "urinaryBowelDisturbance": "Gangguan BAK/BAB",
+    "eatingDisturbance": "Gangguan Makan",
+    "adl": "ADL",
+    "physicalActivity": "Aktivitas Olahraga",
+    "nutritionStatus": "Status Gizi",
+    "mobilityAid": "Alat Bantu Jalan",
+    "poor": "Gizi Kurang/Buruk",
+    "adequate": "Gizi Cukup",
+    "excess": "Gizi Lebih"
+  },
+  "o": {
+    "cranialNerve": "Saraf Kranial I–XII + GBM",
+    "rombergTandem": "Romberg & Tandem Test",
+    "painDetectSensory": "Pain Detect: 7 Sensory Descriptors",
+    "painDetectSpatial": "Pain Detect: Spatial/Temporal",
+    "painDetectScore": "Pain Detect Score",
+    "painDetectInterpretation": "Interpretasi Pain Detect",
+    "phq9Score": "PHQ-9 Score",
+    "mskHeadNeck": "Muskuloskeletal: Head & Neck",
+    "mskShoulder": "Bahu",
+    "mskElbow": "Siku",
+    "mskWrist": "Pergelangan Tangan",
+    "mskBack": "Punggung",
+    "mskKnee": "Lutut",
+    "mskFoot": "Kaki",
+    "neurologicalExam": "Pemeriksaan Neurologis",
+    "routineBloodTest": "Darah Rutin",
+    "usgDoppler": "USG Doppler",
+    "mriCt": "MRI / CT Scan",
+    "petScan": "PET Scan",
+    "immunohistochemistry": "Imunohistokimia"
+  },
+  "a": {
+    "differentialDiagnosis": "Diagnosis Banding",
+    "workingDiagnosis": "Diagnosis Kerja"
+  },
+  "p": {
+    "treatmentGoal": "Goal Penatalaksanaan",
+    "usgIpmPlan": "Pro USG IPM",
+    "followUpDate": "Jadwal Kontrol (Tanggal)",
+    "followUpTime": "Jadwal Kontrol (Jam)",
+    "treatmentPlan": "Rencana Terapi",
+    "medications": "Obat-obatan",
+    "physiotherapy": "Fisioterapi",
+    "lifestyleModification": "Modifikasi Gaya Hidup",
+    "patientEducation": "Edukasi Pasien",
+    "proceduresPerformed": "Tindakan yang Dilakukan",
+    "monitoringNotes": "Catatan Monitoring & Follow-up"
+  }
+}

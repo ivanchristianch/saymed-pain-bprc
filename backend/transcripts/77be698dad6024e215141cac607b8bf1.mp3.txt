@@ -1,0 +1,35 @@
+SPEAKER_00: Selamat pagi Ibu Ani, ada keluhan apa ya Bu yang membuat Ibu datang hari ini?
+SPEAKER_01: Selamat pagi dok, jadi bahu kanan saya sakit udah sekitar dari dua minggu yang lalu dok?
+SPEAKER_00: Oh bahu kanan sakit ya Bu, dari dua minggu yang lalu, itu nyarinya muncul tiba-tiba atau setelah melakukan aktivitas tertentu ya Bu?
+SPEAKER_01: Jadi awalnya itu, saya angkat galon air di rumah. Nah, biasanya itu saya emang gak pernah angkat galon. Tapi hari itu gak ada yang angkat di rumah, jadi saya angkat. Terus, abis angkat galon itu mulai kerasa bahu yang kanan sakit.
+SPEAKER_00: Oke, bahu yang kanan ya Bu ya. Nah, bagian bahu kanannya itu bagian mana yang paling sakit Bu? Bagian luarnya, bagian dalam, bagian tengah, bagian mana-mana?
+SPEAKER_01: jadi lebih ke luar
+SPEAKER_00: bagian luar bahu kanan ya bu ya apakah nyarinya lebih sering muncul saat tangannya diangkat atau tangannya ke bawah saat tiduran mungkin atau saat posisi tertentu bu
+SPEAKER_01: ya jadi nyarinya tuh muncul terutama pas kayak lagi gerakin tangan ke atas
+SPEAKER_00: oke kalau ke samping
+SPEAKER_01: agak sakit juga
+SPEAKER_00: oke apakah ada terasa lemah saat mengangkat tangan bu
+SPEAKER_01: Agak kerasa gak kuat kayak biasanya karena sakitnya itu.
+SPEAKER_00: Oke. Apakah jadinya lebih terasa pada saat malam hari atau saat tidurnya miring,
+SPEAKER_01: Bu? Iya, jadi kalau tidur miring ke kanan itu kan ketekendok. Jadi kerasa lebih sakit.
+SPEAKER_00: Oke. Apakah ada rasa kebas atau kesemutan di tangan?
+SPEAKER_01: Gak ada.
+SPEAKER_00: Gak ada ya? Sebelumnya udah pernah pengalami keluhan seperti ini di bahu ibu?
+SPEAKER_01: Nggak, belum pernah dong.
+SPEAKER_00: Oke, saya izin tanya riwayat penyakit sebelumnya ya, ada riwayat penyakit diabetes mellitus ataupun hipertensi ataupun kolesterol tinggi, stroke, jantung, gangguan ginja ataupun penyakit kanker atau penyakit lain sebelumnya?
+SPEAKER_01: Saya punya riwayat darah tinggi dok.
+SPEAKER_00: Oke, punya riwayat kanan darah tinggi ya bu ya. Untuk tekanan dari tinggi tersebut, apakah mengonsumsi obat-obatan tertentu, Bu?
+SPEAKER_01: Ya, saya minum amlodipin tiap
+SPEAKER_00: malam. Amlodipin yang berapa,
+SPEAKER_01: Bu?
+SPEAKER_00: Yang 10 miligram. Di anggota keluarga ibu, di ayah dan ibu, atau adik kakak yang kandung, ada penyakit seperti diabetes, hipertensi, atau penyakit sendi, atau penyakit yang lainnya, Bu?
+SPEAKER_01: Kalau ayah saya juga darah tinggi, kalau ibu saya ada gula
+SPEAKER_00: dong. Oke, ayahnya ada hipertensi, ibunya diabetes melitus ya bu ya. Untuk keluhan ibunya saat ini, sudah mencoba dilakukan pengobatan atau mengonsumsi obat-obatan tertentu
+SPEAKER_01: bu? Cuma minum peredah nyeri-peredah nyeri aja dok, jadi dikas tau teman katanya pake ini lumayan beres sakitnya. Jadi baru coba beli itu aja dok di aplotek.
+SPEAKER_00: Ingat nama obatnya bu?
+SPEAKER_01: Paracetamol dong.
+SPEAKER_00: Oke. Membaik gak bu setelah minum paracetamol?
+SPEAKER_01: Memang enakan sih dok abis minum itu. Tapi kalau lagi gerak tuh tetap sakit. Tetap
+SPEAKER_00: sakit. Oke. Ada sedikit berefek tapi tetap sakit ya bu ya ketika digerakin ya bu ya. Oke. Ada riwayat operasi sebelumnya bu?
+SPEAKER_01: Belum pernah sih dong.
+SPEAKER_00: Belum pernah. Oke baik bu. Sekarang saya izin lakukan pemeriksaan fisik ya bu ya. Ibu boleh naik ke atas bed pemeriksaannya bu ya.

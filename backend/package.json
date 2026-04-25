@@ -1,0 +1,45 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "migrate": "tsx src/migrate.ts",
+    "seed": "tsx src/seed.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "form-data": "^4.0.5",
+    "ioredis": "^5.10.1",
+    "jsonwebtoken": "^9.0.3",
+    "kysely": "^0.28.16",
+    "multer": "^2.1.1",
+    "node-fetch": "^3.3.2",
+    "pg": "^8.20.0",
+    "pino": "^10.3.1"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.1.0",
+    "@types/node": "^25.6.0",
+    "@types/node-fetch": "^2.6.13",
+    "@types/pg": "^8.20.0",
+    "@types/pino": "^7.0.4",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.3"
+  }
+}
