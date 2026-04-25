@@ -11,10 +11,19 @@ function handleUnauthorized() {
   window.location.replace('/login');
 }
 
+/** Fallback UUID v4 generator for non-secure contexts (plain HTTP). */
+function generateUUID(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
 export async function fetchApi(endpoint: string, options: RequestInit = {}) {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'x-request-id': crypto.randomUUID(),
+    'x-request-id': crypto.randomUUID?.() ?? generateUUID(),
     ...getAuthHeaders(),
     ...options.headers,
   } as Record<string, string>;
