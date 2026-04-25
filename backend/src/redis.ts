@@ -6,10 +6,10 @@ export const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379'
   // Queue commands while reconnecting instead of failing immediately
   enableOfflineQueue: true,
   maxRetriesPerRequest: 3,
-  retryStrategy: (times) => Math.min(times * 200, 2000),
+  retryStrategy: (times: number) => Math.min(times * 200, 2000),
 });
 
-redis.on('error', (err) => {
+redis.on('error', (err: Error) => {
   getLogger().error({ msg: 'Redis error', err: err.message });
 });
 
