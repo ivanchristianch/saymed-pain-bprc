@@ -1,4 +1,4 @@
-import Redis from 'ioredis';
+import { Redis } from 'ioredis';
 import { PIPELINE_LOCK_TTL_MS } from './constants.js';
 import { getLogger } from './logger.js';
 
