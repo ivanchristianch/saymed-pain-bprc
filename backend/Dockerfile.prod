@@ -33,4 +33,4 @@ COPY migrations ./migrations
 
 EXPOSE 8000
 
-CMD ["node", "dist/index.js"]
+CMD ["sh", "-c", "node dist/migrate.js && node dist/index.js"]

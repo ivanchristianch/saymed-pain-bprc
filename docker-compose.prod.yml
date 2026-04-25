@@ -13,7 +13,7 @@
 #        0 0,12 * * * docker compose -f /path/to/docker-compose.prod.yml run --rm certbot renew --quiet && docker compose -f /path/to/docker-compose.prod.yml exec nginx nginx -s reload
 #
 # Upgrade notes:
-#   - Backend migrations run automatically on container start via CMD.
+#   - Backend migrations run automatically on container start (migrate → then start server).
 #     If you need to run them manually: docker compose exec api node dist/migrate.js
 # ──────────────────────────────────────────────────────────────────────────────
 
