@@ -24,7 +24,15 @@ redis.on('connect', () => {
  */
 export async function acquireLock(encounterId: number): Promise<boolean> {
   const key = `process_lock:encounter:${encounterId}`;
-  const result = await redis.set(key, '1', 'NX', 'PX', PIPELINE_LOCK_TTL_MS);
+  
+  // Use the options object syntax to satisfy TypeScript overloads
+  const result = await redis.set(
+    key, 
+    '1', 
+    'PX', PIPELINE_LOCK_TTL_MS, 
+    'NX'
+  );
+
   return result === 'OK';
 }
 
