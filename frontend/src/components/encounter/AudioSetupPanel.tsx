@@ -189,7 +189,10 @@ export default function AudioSetupPanel({
         {(localAudioUrl || serverAudioUrl) && (
           <audio src={localAudioUrl || serverAudioUrl || undefined} controls style={{ width: '100%', marginBottom: 16 }} />
         )}
-        <ProcessButton />
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <ProcessButton />
+          <SelectFileButton />
+        </Box>
       </Paper>
     );
   }
@@ -209,7 +212,10 @@ export default function AudioSetupPanel({
         {(localAudioUrl || serverAudioUrl) && (
           <audio src={localAudioUrl || serverAudioUrl || undefined} controls style={{ width: '100%', marginBottom: 16 }} />
         )}
-        <ProcessButton />
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <ProcessButton />
+          <SelectFileButton />
+        </Box>
       </Paper>
     );
   }

@@ -231,6 +231,10 @@ export default function EncounterDetail() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      if (file.size === 0) {
+        setErrorMsg(t('encounter.recording.emptyAudioError'));
+        return;
+      }
       setAudioFile(file);
       setLocalAudioUrl(URL.createObjectURL(file));
       setStage('recorded');
@@ -241,6 +245,10 @@ export default function EncounterDetail() {
   // ─── Upload audio ─────────────────────────────────────────────────────────
   const handleUploadAudio = async () => {
     if (!audioFile) return;
+    if (audioFile.size === 0) {
+      setErrorMsg(t('encounter.recording.emptyAudioError'));
+      return;
+    }
     setStage('uploading');
     stageRef.current = 'uploading';
     setErrorMsg('');

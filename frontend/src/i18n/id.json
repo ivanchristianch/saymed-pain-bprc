@@ -59,6 +59,7 @@
       "elapsed": "Durasi",
       "retryTranscribe": "Transkrip & Analisis gagal. Silakan coba lagi.",
       "retryAnalyze": "Analisis gagal. Klik tombol di bawah untuk mencoba lagi.",
+      "emptyAudioError": "Rekaman audio kosong. Silakan rekam atau pilih file audio yang valid.",
       "transcriptAvailable": "Transkripsi tersedia"
     },
     "save": "Simpan",
