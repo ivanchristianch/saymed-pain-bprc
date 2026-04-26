@@ -43,3 +43,58 @@ export async function releaseLock(encounterId: number): Promise<void> {
   const key = `process_lock:encounter:${encounterId}`;
   await redis.del(key);
 }
+
+/**
+ * Forcibly release a stale lock left by a crashed/killed process.
+ * Semantically identical to releaseLock but intent is made explicit for recovery context.
+ */
+export async function forceReleaseLock(encounterId: number): Promise<void> {
+  const key = `process_lock:encounter:${encounterId}`;
+  await redis.del(key);
+}
+
+/**
+ * Check whether a pipeline lock currently exists for the given encounter.
+ * Used by the boot-time recovery scanner to identify in-flight jobs that were
+ * abandoned when the previous process was killed.
+ */
+export async function hasLock(encounterId: number): Promise<boolean> {
+  const key = `process_lock:encounter:${encounterId}`;
+  const result = await redis.exists(key);
+  return result === 1;
+}
+
+// ─── Active pipeline set ──────────────────────────────────────────────────────
+// Tracks which encounter IDs currently have a pipeline running.
+// Used by boot-time recovery: SMEMBERS gives the full list of in-flight
+// encounters without any DB scan.
+//
+// Best-effort: if Redis crashes the set is lost, and those encounters will not
+// be recovered on the next boot — they will time out naturally instead.
+
+const ACTIVE_SET_KEY = 'active_pipeline_encounters';
+
+/**
+ * Add an encounter to the active-pipeline set.
+ * Called immediately after acquireLock succeeds.
+ */
+export async function addToActiveSet(encounterId: number): Promise<void> {
+  await redis.sadd(ACTIVE_SET_KEY, String(encounterId));
+}
+
+/**
+ * Remove an encounter from the active-pipeline set.
+ * Called in the pipeline .finally() before releaseLock.
+ */
+export async function removeFromActiveSet(encounterId: number): Promise<void> {
+  await redis.srem(ACTIVE_SET_KEY, String(encounterId));
+}
+
+/**
+ * Return all encounter IDs currently in the active-pipeline set.
+ * Called once at boot by RecoveryService.
+ */
+export async function getActiveEncounterIds(): Promise<number[]> {
+  const members = await redis.smembers(ACTIVE_SET_KEY);
+  return members.map(Number);
+}

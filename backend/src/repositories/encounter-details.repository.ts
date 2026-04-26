@@ -4,6 +4,14 @@ import { EncounterDetails, EncounterDetailsUpdate } from '../types/db.js';
 type CreateEncounterDetailsData = Omit<EncounterDetails, 'id' | 'created_at' | 'updated_at' | 'deleted_at'>;
 
 export class EncounterDetailsRepository {
+  async findById(id: number): Promise<EncounterDetails | undefined> {
+    return db
+      .selectFrom('encounter_details_tab')
+      .selectAll()
+      .where('id', '=', id)
+      .executeTakeFirst();
+  }
+
   async findByEncounter(encounterId: number): Promise<EncounterDetails | undefined> {
     return db
       .selectFrom('encounter_details_tab')

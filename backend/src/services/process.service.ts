@@ -7,7 +7,7 @@ import { EncounterRepository } from '../repositories/encounter.repository.js';
 import { EncounterDetailsRepository } from '../repositories/encounter-details.repository.js';
 import { TranscriptRepository } from '../repositories/transcript.repository.js';
 import { AnalysisRepository } from '../repositories/analysis.repository.js';
-import { acquireLock, releaseLock } from '../redis.js';
+import { acquireLock, releaseLock, addToActiveSet, removeFromActiveSet } from '../redis.js';
 import { getLogger } from '../logger.js';
 import {
   TRANSCRIPT_STATE,
@@ -140,9 +140,41 @@ export class ProcessService {
       return;
     }
 
+    await addToActiveSet(encounterId);
     this.runPipelineBackground(encounterId, details.id)
       .catch((err) => getLogger().error({ msg: 'Pipeline unhandled error', encounterId, err: err?.message ?? String(err) }))
-      .finally(() => releaseLock(encounterId));
+      .finally(async () => {
+        await removeFromActiveSet(encounterId);
+        releaseLock(encounterId);
+      });
+  }
+
+  /**
+   * Internal-only variant of trigger() used by the boot-time recovery service.
+   * Skips the business ownership check — safe because this is called from a
+   * trusted internal context (server init), not from an HTTP request.
+   */
+  async triggerInternal(encounterId: number): Promise<void> {
+    const details = await this.detailsRepo.findByEncounter(encounterId);
+    if (!details?.audio_file) {
+      getLogger().warn({ msg: 'triggerInternal: no audio_file, skipping', encounterId });
+      return;
+    }
+
+    const acquired = await acquireLock(encounterId);
+    if (!acquired) {
+      getLogger().info({ msg: 'triggerInternal: lock already held, skipping', encounterId });
+      return;
+    }
+
+    await addToActiveSet(encounterId);
+    getLogger().info({ msg: 'triggerInternal: starting pipeline', encounterId });
+    this.runPipelineBackground(encounterId, details.id)
+      .catch((err) => getLogger().error({ msg: 'Pipeline unhandled error (recovery)', encounterId, err: err?.message ?? String(err) }))
+      .finally(async () => {
+        await removeFromActiveSet(encounterId);
+        releaseLock(encounterId);
+      });
   }
 
   async getStatus(encounterId: number, businessId: number): Promise<PipelineStatus> {
