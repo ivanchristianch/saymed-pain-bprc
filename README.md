@@ -204,23 +204,23 @@ cp .env.example .env
 
 Certbot requires port 80 to be publicly reachable before issuing a certificate.
 
-#### 3. Start Nginx so Certbot can complete the ACME challenge
+#### 3. Bootstrap Nginx for the ACME challenge
+
+On first run Nginx refuses to start because the TLS certificate files don't exist yet.
+The solution is to temporarily run Nginx with the no-TLS config (HTTP only), obtain the cert, then switch back.
+
+**3a. Swap the Nginx config mount in `docker-compose.prod.yml`:**
+
+```yaml
+# Change this line in the nginx service volumes:
+- ./nginx/nginx.no-tls.conf:/etc/nginx/templates/default.conf.template:ro
+```
+
+**3b. Start Nginx:**
 
 ```bash
 docker compose -f docker-compose.prod.yml up -d nginx
 ```
-
-> On first run, Nginx will fail to start because the certificate files don't exist yet.
-> Create a temporary self-signed cert to allow Nginx to boot, then replace it:
->
-> ```bash
-> mkdir -p certbot/certs/live/<DOMAIN>
-> openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
->   -keyout certbot/certs/live/<DOMAIN>/privkey.pem \
->   -out certbot/certs/live/<DOMAIN>/fullchain.pem \
->   -subj "/CN=localhost"
-> docker compose -f docker-compose.prod.yml up -d nginx
-> ```
 
 #### 4. Issue the TLS certificate
 
@@ -233,19 +233,20 @@ docker compose -f docker-compose.prod.yml \
   --agree-tos --no-eff-email
 ```
 
-On success, reload Nginx to pick up the real certificate:
+**Revert the Nginx config mount back to the TLS config:**
 
-```bash
-docker compose -f docker-compose.prod.yml exec nginx nginx -s reload
+```yaml
+- ./nginx/nginx.conf:/etc/nginx/templates/default.conf.template:ro
 ```
 
 #### 5. Start all services
 
 ```bash
+docker compose -f docker-compose.prod.yml up -d --force-recreate nginx
 docker compose -f docker-compose.prod.yml up -d
 ```
 
-The API container runs `node dist/migrate.js` automatically on startup before serving traffic.
+The API container runs `node dist/src/migrate.js` automatically on startup before serving traffic.
 
 #### 6. Set up certificate auto-renewal (host cron)
 
@@ -263,7 +264,10 @@ The API container runs `node dist/migrate.js` automatically on startup before se
 docker compose -f docker-compose.prod.yml logs -f api
 
 # Run migrations manually
-docker compose -f docker-compose.prod.yml exec api node dist/migrate.js
+docker compose -f docker-compose.prod.yml exec api node dist/src/migrate.js
+
+# Run seed (creates admin user and default business)
+docker compose -f docker-compose.prod.yml exec api node dist/src/seed.js
 
 # Restart only the API (e.g. after an env change)
 docker compose -f docker-compose.prod.yml restart api
@@ -283,10 +287,10 @@ The project uses [Kysely](https://kysely.dev/) migrations. Files live in `backen
 ### Run migrations
 
 ```bash
-# Inside the container (recommended — uses the DB container hostname)
-docker exec saymed_api npm run migrate
+# Inside the container (production — compiled JS)
+docker compose -f docker-compose.prod.yml exec api node dist/src/migrate.js
 
-# From your host machine (uses localhost:5432 via backend/.env)
+# From your host machine (development — uses tsx, localhost:5432 via backend/.env)
 cd backend && npm run migrate
 ```
 
@@ -366,7 +370,15 @@ Derived UI stages:
 
 ## Default seeded user
 
-When the backend starts for the first time it runs `npm run seed` (see `backend/src/seed.ts`):
+When the backend starts for the first time it automatically runs migrations and then you can seed the admin user manually (see `backend/src/seed.ts`):
+
+```bash
+# Development
+cd backend && npm run seed
+
+# Production (inside container)
+docker compose -f docker-compose.prod.yml exec api node dist/src/seed.js
+```
 
 | Role  | Email               | Password    |
 |-------|---------------------|-------------|

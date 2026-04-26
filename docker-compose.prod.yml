@@ -14,7 +14,7 @@
 #
 # Upgrade notes:
 #   - Backend migrations run automatically on container start (migrate → then start server).
-#     If you need to run them manually: docker compose exec api node dist/migrate.js
+#     If you need to run them manually: docker compose exec api node dist/src/migrate.js
 # ──────────────────────────────────────────────────────────────────────────────
 
 services:
@@ -105,6 +105,8 @@ services:
       - "80:80"
       - "443:443"
     volumes:
+      # TLS bootstrap: swap this to nginx.no-tls.conf before running certbot for the first time,
+      # then revert back to nginx.conf once certificates are obtained.
       - ./nginx/nginx.conf:/etc/nginx/templates/default.conf.template:ro
       - certbot_www:/var/www/certbot:ro
       - certbot_certs:/etc/letsencrypt:ro
