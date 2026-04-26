@@ -4,6 +4,7 @@ import StopIcon from '@mui/icons-material/Stop';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlined';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import GraphicEqIcon from '@mui/icons-material/GraphicEq';
@@ -23,6 +24,7 @@ interface AudioSetupPanelProps {
   onFileSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onUpload: () => void;
   onProcess: () => void;
+  onRetry: () => void;
 }
 
 export default function AudioSetupPanel({
@@ -38,6 +40,7 @@ export default function AudioSetupPanel({
   onFileSelect,
   onUpload,
   onProcess,
+  onRetry,
 }: AudioSetupPanelProps) {
   const { t } = useTranslation();
 
@@ -80,6 +83,23 @@ export default function AudioSetupPanel({
     </Button>
   );
 
+  const RetryButton = () => (
+    <Button
+      fullWidth variant="outlined" size="large"
+      startIcon={<RefreshIcon />}
+      onClick={onRetry}
+    >
+      {t('encounter.recording.retry')}
+    </Button>
+  );
+
+  const IdleActions = () => (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <RecordOrStopButton />
+      <SelectFileButton disabled={recording} />
+    </Box>
+  );
+
   // ── IDLE ──────────────────────────────────────────────────────────────────
   if (stage === 'idle') {
     return (
@@ -91,18 +111,7 @@ export default function AudioSetupPanel({
             {t('encounter.soap.noAudioHint')}
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {!recording ? (
-            <Button fullWidth variant="contained" color="error" size="large" startIcon={<MicIcon />} onClick={onStartRecording}>
-              {t('encounter.recording.start')}
-            </Button>
-          ) : (
-            <Button fullWidth variant="outlined" color="error" size="large" startIcon={<StopIcon />} onClick={onStopRecording}>
-              {t('encounter.recording.stop')}
-            </Button>
-          )}
-          <SelectFileButton disabled={recording} />
-        </Box>
+        <IdleActions />
       </Paper>
     );
   }
@@ -191,7 +200,7 @@ export default function AudioSetupPanel({
         )}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <ProcessButton />
-          <SelectFileButton />
+          <RetryButton />
         </Box>
       </Paper>
     );
@@ -214,7 +223,7 @@ export default function AudioSetupPanel({
         )}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <ProcessButton />
-          <SelectFileButton />
+          <RetryButton />
         </Box>
       </Paper>
     );

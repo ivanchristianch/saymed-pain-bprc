@@ -282,6 +282,12 @@ export default function EncounterDetail() {
     startPolling();
   };
 
+  const handleRetry = () => {
+    setErrorMsg('');
+    setStage('idle');
+    stageRef.current = 'idle';
+  };
+
   // ─── SOAP save ────────────────────────────────────────────────────────────
   const handleChange = (section: string, field: string, subfield: string | null, value: any) => {
     setFormData((prev: any) => {
@@ -383,6 +389,7 @@ export default function EncounterDetail() {
               onFileSelect={handleFileSelect}
               onUpload={handleUploadAudio}
               onProcess={handleProcess}
+              onRetry={handleRetry}
             />
           )}
         </Box>
